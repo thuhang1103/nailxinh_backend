@@ -3,10 +3,12 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const bcrypt = require('bcrypt');
-const { connectDB } = require("./src/configs/db");
+const pool = require("./src/configs/db"); 
 const userRoutes = require("./src/routers/users");
 const authRoutes = require("./src/routers/authroutes");
 const productRoutes = require("./src/routers/products");
+const suggestionRoutes = require('./src/routers/suggestion_routes');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const nodemailer = require('nodemailer');
@@ -23,13 +25,10 @@ app.get("/", (req, res) => {
 // Router
 app.use("/api/users", userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/suggestions', suggestionRoutes);
 
 // Kết nối DB và khởi chạy server
-connectDB()
-  .then(() => {
-    console.log("Kết nối SQL Server thành công!");
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch(err => console.error("Lỗi kết nối DB:", err));
+app.listen(PORT, () => {
+  console.log("Kết nối MySQL thành công!");
+  console.log(`Server running on http://localhost:${PORT}`);
+});

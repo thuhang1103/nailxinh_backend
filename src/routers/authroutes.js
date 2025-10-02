@@ -6,8 +6,9 @@ const bcrypt = require('bcrypt');
 
 router.post('/login', AuthController.login);
 router.post('/logout', authenticateJWT, AuthController.logout);
-router.post('/sendOTP', AuthController.sendOtp);
-router.post('/verifyOTP', AuthController.verifyOtp);
+router.post('/sendOtp', AuthController.sendOtp);
+router.post('/verifyOtp', AuthController.verifyOtp);
+router.post('/resetPassword', AuthController.resetPassword);
 router.post('/registerCustomer', AuthController.registerCustomer);
 router.post('/registerStaff', authenticateJWT, authorizeRoles('Admin'), AuthController.registerStaff);
 router.post('/refreshToken', AuthController.refreshToken);

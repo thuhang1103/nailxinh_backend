@@ -2,55 +2,57 @@
 
 // module.exports = ProductModel;
 
-const { connectDB } = require("../configs/db");
-const Product = require("./product");
+const Product = require('./product');
+const pool = require("../configs/db");
 
 const ProductModel = {
   // Lấy sản phẩm theo tên
+  getAllSortedBySoldQuantity: async () => {
+  const [rows] = await pool.execute(
+    "CALL GetAllProductsSortedBySoldQuantity()"
+  );
+  return rows[0].map(row => new Product(row));
+},
   getByName: async (name) => {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
-      "SELECT * FROM Products WHERE ProductName LIKE ?",
-      [`%${name}%`]
-    );
-    return rows.map(row => new Product(row));
+    console.log('Đang tìm kiếm sản phẩm với tên:', name);
+  const [rows] = await pool.execute(
+    "CALL GetProductsByName(?)",
+    [name]
+  );
+  console.log('Kết quả truy vấn:', rows);
+  // Khi dùng CALL, kết quả trả về là mảng 2 chiều: [ [rows], ... ]
+  return rows[0].map(row => new Product(row));
   },
 
-  // Lấy sản phẩm theo category
   getByCategory: async (categoryId) => {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
-      "SELECT * FROM Products WHERE CategoryID = ?",
-      [categoryId]
-    );
-    return rows.map(row => new Product(row));
+  const [rows] = await pool.execute(
+    "CALL GetProductsByCategory(?)",
+    [categoryId]
+  );
+  return rows[0].map(row => new Product(row));
   },
 
-  // Lấy sản phẩm theo ID
   getById: async (id) => {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
-      "SELECT * FROM Products WHERE ProductID = ?",
-      [id]
-    );
-    return rows.length > 0 ? rows.map(row => new Product(row)) : null;
+  const [rows] = await pool.execute(
+    "CALL GetProductByID(?)",
+    [id]
+  );
+  return rows[0].length > 0 ? rows[0].map(row => new Product(row)) : null;
   },
 
-  // Lấy sản phẩm theo status
   getByStatus: async (status) => {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
-      "SELECT * FROM Products WHERE status_Product = ?",
-      [status]
-    );
-    return rows.map(row => new Product(row));
+  const [rows] = await pool.execute(
+    "CALL GetProductsByStatus(?)",
+    [status]
+  );
+  return rows[0].map(row => new Product(row));
   },
 
   // Tạo sản phẩm mới
   create: async (product) => {
     const { ProductName, Price, Description, CategoryID, StockQuantity, SoldQuanlity, ImagePath, status_Product } = product;
-    const connection = await connectDB();
-    await connection.execute(
+    
+    await pool.execute(
       `INSERT INTO Products 
       (ProductName, Price, Description, CategoryID, StockQuantity, SoldQuanlity, ImagePath, status_Product, CreatedAt, UpdatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
@@ -60,7 +62,6 @@ const ProductModel = {
 
   // Cập nhật sản phẩm
   updateProduct: async (id, product) => {
-    const connection = await connectDB();
     const fields = [];
     const values = [];
 
@@ -79,17 +80,17 @@ const ProductModel = {
     const sql = `UPDATE Products SET ${fields.join(", ")} WHERE ProductID = ?`;
     values.push(id);
 
-    await connection.execute(sql, values);
+    await pool.execute(sql, values);
   },
 
   // Xóa sản phẩm
   delete: async (id) => {
-    const connection = await connectDB();
-    await connection.execute(
+    await pool.execute(
       "DELETE FROM Products WHERE ProductID = ?",
       [id]
     );
-  }
+  },
+  
 };
 
 module.exports = ProductModel;

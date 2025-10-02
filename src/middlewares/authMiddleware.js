@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 function authenticateJWT(req, res, next) {
+  console.log('vào  authenticate');
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ message: 'Missing token' });
 

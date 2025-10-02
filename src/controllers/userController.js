@@ -41,6 +41,25 @@ class UserController {
       res.status(500).json({ error: 'Lỗi khi xóa người dùng' });
     }
   }
+  static async checkUsername(req, res) {
+  try {
+    const { username } = req.body;
+    const user = await UserModel.findByUserName(username);
+    res.json({ exists: !!user });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi kiểm tra username' });
+  }
+}
+
+static async checkEmail(req, res) {
+  try {
+    const { email } = req.body;
+    const user = await UserModel.findByEmail(email);
+    res.json({ exists: !!user });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi kiểm tra email' });
+  }
+}
 
   // Các phương thức khác như register, login có thể thêm tương tự
 }

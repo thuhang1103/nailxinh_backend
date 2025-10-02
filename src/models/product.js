@@ -22,7 +22,7 @@ class Product {
     this.ImagePath = ImagePath;
     this.CreatedAt = CreatedAt;
     this.UpdatedAt = UpdatedAt;
-    this.status_Product = status_Product;
+    this.Status_Product = status_Product;
   }
 }
 

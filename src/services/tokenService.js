@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 function signRegistrationToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.REG_TOKEN_EXP || '10m' });
 }
-function verifyRegistrationToken(token) {
+function verifyToken(token) {
   return jwt.verify(token, process.env.JWT_SECRET);
 }
 function signAuthToken(payload) {
@@ -17,4 +17,4 @@ function signAuthRefreshToken(payload) {
     { expiresIn: process.env.AUTH_REFRESH_TOKEN_EXP || '7d' }
   );
 }
-module.exports = { signRegistrationToken, verifyRegistrationToken, signAuthToken, signAuthRefreshToken };
+module.exports = { signRegistrationToken, verifyToken, signAuthToken, signAuthRefreshToken };

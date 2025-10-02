@@ -13,16 +13,22 @@ async function sendOtp(email) {
   // Simple rate-limit: nếu keyResend tồn tại -> deny (ví dụ 60s)
   const resend = await cache.get(keyResend);
   if (resend) {
-    throw { status: 429, message: 'Bạn gửi quá nhanh. Vui lòng chờ.' };
+    throw { status: 429, message: 'Bạn gửi quá nhanh. Vui lòng chờ 30s.' };
   }
 
   const otp = generateOtp();
   await cache.set(keyOtp, otp, OTP_TTL);
-  await cache.set(keyResend, '1', 60); // block resend trong 60s
+  await cache.set(keyResend, '1', 30);
 
   await mail.sendOtpEmail(email, otp);
   return true;
 }
+async function sendConfirmationEmail(email, userName) {
+
+  await mail.sendConfirmationEmail(email, userName);
+  return true;
+}
+
 
 async function verifyOtp(email, otp) {
   const keyOtp = `otp:email:${email}`;
@@ -34,7 +40,7 @@ async function verifyOtp(email, otp) {
   if (saved !== otp) {
     const attempts = await cache.incr(keyAttempts);
     if (attempts === 1) await cache.expire(keyAttempts, 300); // reset attempts window
-    if (attempts > 5) throw { status: 429, message: 'Quá nhiều lần thử. Thử lại sau.' };
+    if (attempts > 10) throw { status: 429, message: 'Quá nhiều lần thử. Thử lại sau.' };
     throw { status: 401, message: 'OTP không đúng' };
   }
 
@@ -47,4 +53,4 @@ async function verifyOtp(email, otp) {
   return regToken;
 }
 
-module.exports = { sendOtp, verifyOtp };
+module.exports = { sendOtp, verifyOtp, sendConfirmationEmail };

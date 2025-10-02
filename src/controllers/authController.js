@@ -11,11 +11,11 @@ class AuthController {
     const user = await userModel.findByUserName(UserName);
     if (!user) return res.status(401).json({ message: 'Tên đăng nhập không tồn tại' });
 
-    // const isValid = await bcrypt.compare(Password,user.Password);
-    if (Password !== user.Password) {
-      return res.status(401).json({ message: 'Sai mật khẩu' });
-   }
-    // if (!isValid) return res.status(401).json({ message: 'Sai mật khẩu' });
+    const isValid = await bcrypt.compare(Password,user.Password);
+  //   if (Password !== user.Password) {
+  //     return res.status(401).json({ message: 'Sai mật khẩu' });
+  //  }
+    if (!isValid) return res.status(401).json({ message: 'Sai mật khẩu' });
 
     const token = jwt.sign(
       { UserID: user.UserID, Role: user.Role },
@@ -76,9 +76,12 @@ class AuthController {
 
  static async  sendOtp(req, res) {
   try {
+    console.log('đã vào sentotp backend', req.body.email);
+
     const { email } = req.body;
     if (!email) return res.status(400).json({ ok:false, message:'Email required' });
     await authService.sendOtp(email);
+    console.log('OTP đã được gửi đến email:', email);
     return res.json({ ok:true, message:'OTP sent' });
   } catch (err) {
     const status = err.status || 500;
@@ -88,6 +91,7 @@ class AuthController {
 
 static async verifyOtp(req, res) {
   try {
+   console.log('đã vào verify otp backend', req.body);
     const { email, otp } = req.body;
     if (!email || !otp) return res.status(400).json({ ok:false, message:'Email & OTP required' });
     const regToken = await authService.verifyOtp(email, otp);
@@ -100,6 +104,7 @@ static async verifyOtp(req, res) {
 
 static async registerCustomer(req, res) {
   try {
+    console.log('đã vào register customer backend', req.body);
     const { email, password, username, registrationToken } = req.body;
      const existingEmail = await userModel.findByEmail(email);
     if (existingEmail) {
@@ -112,15 +117,53 @@ static async registerCustomer(req, res) {
       return res.status(400).json({ ok: false, message: 'Tên đăng nhập đã tồn tại' });
     }
     // verify registrationToken (use token.service)
-    const { verifyRegistrationToken } = require('../services/token.service');
-    const payload = verifyRegistrationToken(registrationToken);
-    if (payload.email !== email) return res.status(401).json({ ok:false, message:'Token invalid' });
-
-    // create user (hash password)
-    const bcrypt = require('bcryptjs');
+    const { verifyToken } = require('../services/tokenService');
+    const payload = verifyToken(registrationToken);
+    console.log('verify được token payload', payload.email);
+    if (payload.email !== email) {
+      console.log('email khong đúng ');
+      return res.status(401).json({ ok:false, message:'Token invalid' });
+    }
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = await userModel.createCustomer({ email, passwordHash: hashed, username, role: 'Customer' });
-    return res.status(201).json({ ok:true, message:'Customer registered', userId: newUser.UserID });
+    console.log('chuẩn bị tạo user và hashed password:', hashed);
+    const newUser = await userModel.createCustomer({ email: email, passwordHash: hashed, username: username, role: 'Customer' });
+    console.log('new user created:', newUser);
+    return res.status(201).json({ ok:true, message:'Customer registered', userId: newUser.id});
+
+  } catch (err) {
+    const status = err.status || 500;
+    return res.status(status).json({ ok:false, message: err.message || 'Server error' });
+  }
+}
+
+static async resetPassword(req, res) {
+  try {
+    console.log('đã vào reset password backend', req.body);
+    const { email, password, resetpassToken } = req.body;
+    console.log('dữ liệu nhận được:', { email, password, resetpassToken });
+    if (!email || !password || !resetpassToken) {
+      console.log('Thiếu thông tin');
+      return res.status(400).json({ ok: false, message: 'Thiếu thông tin' });
+    }
+     const existingEmail = await userModel.findByEmail(email);
+    if (!existingEmail) {
+      return res.status(400).json({ ok: false, message: 'Email chưa đăng kí ' });
+    }
+    console.log('có email', existingEmail);
+    // verify registrationToken (use token.service)
+    const { verifyToken } = require('../services/tokenService');
+    const payload = verifyToken(resetpassToken);
+    console.log('verify được token payload', payload.email);
+    if (payload.email !== email) {
+      console.log('email khong đúng ');
+      return res.status(401).json({ ok:false, message:'Token invalid' });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    console.log('chuẩn bị tạo mật khẩu mới :', hashed);
+    await userModel.setPassword(existingEmail.UserID, hashed);
+    console.log('đổi mật khẩu thành công ', existingEmail);
+    await authService.sendConfirmationEmail(email, existingEmail.UserName);
+    return res.status(201).json({ ok:true, message:'password reseted', userName: existingEmail.UserName });
 
   } catch (err) {
     const status = err.status || 500;
@@ -132,8 +175,8 @@ static async registerStaff(req, res) {
   try {
     const { email, password, username, registrationToken } = req.body;
     // verify registrationToken (use token.service)
-    const { verifyRegistrationToken } = require('../services/token.service');
-    const payload = verifyRegistrationToken(registrationToken);
+    const { verifyToken } = require('../services/token.service');
+    const payload = verifyToken(registrationToken);
     if (payload.email !== email) return res.status(401).json({ ok:false, message:'Token invalid' });
 
     // create user (hash password)

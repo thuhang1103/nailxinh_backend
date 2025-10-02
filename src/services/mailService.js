@@ -19,5 +19,14 @@ async function sendOtpEmail(email, otp) {
   };
   return transporter.sendMail(mail);
 }
+async function sendConfirmationEmail(email, userName) {
+  const mail = {
+    from: `"NailXinh" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'Xác nhận đổi mật khẩu thành công từ NailXinh',
+    html: `<p>Tài khoản  ${userName} của bạn vừa đổi mật khẩu thành công </p>`,
+  };
+  return transporter.sendMail(mail);
+}
 
-module.exports = { sendOtpEmail };
+module.exports = { sendOtpEmail, sendConfirmationEmail };

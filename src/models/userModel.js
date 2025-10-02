@@ -1,29 +1,26 @@
 
 
 
-const { connectDB } = require("../configs/db");
+const pool = require("../configs/db");
 const User = require("./User");
 
 class UserModel {
   // Lấy tất cả người dùng
   static async getAllUsers() {
-    const connection = await connectDB();
-    const [rows] = await connection.execute("SELECT * FROM Users");
+    const [rows] = await pool.execute("SELECT * FROM Users");
     return rows.map(row => new User(row));
   }
 
   // Tìm người dùng theo UserName
   static async findByUserName(UserName) {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       "SELECT * FROM Users WHERE UserName = ?",
       [UserName]
     );
     return rows[0] || null;
   }
   static async findByEmail(Email) {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       "SELECT * FROM Users WHERE Email = ?",
       [Email]
     );
@@ -32,8 +29,7 @@ class UserModel {
 
   // Tìm người dùng theo Email
   static async findByID(UserID) {
-    const connection = await connectDB();
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       "SELECT * FROM Users WHERE UserID = ?",
       [UserID]
     );
@@ -43,20 +39,19 @@ class UserModel {
   // Tạo người dùng mới
   
   static async createCustomer({ email, passwordHash, username, role }) {
-  const connection = await connectDB();
-  const [result] = await connection.execute(
+    console.log('Đang tạo user với:', { email, passwordHash, username, role });
+  const [result] = await pool.execute(
     `INSERT INTO Users 
         (UserName, Email, Password, Role, Phone, avatarImage, CreatedAt, UpdatedAt)
        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [username, email, passwordHash, role, null, 'default.png']
   );
   return {
-    id: result.insertId,
+      id: result.insertId,
   };
   }
   static async createStaff({ email, passwordHash, username, role }) {
-  const connection = await connectDB();
-  const [result] = await connection.execute(
+  const [result] = await pool.execute(
     `INSERT INTO Users 
         (UserName, Email, Password, Role, Phone, avatarImage, CreatedAt, UpdatedAt)
        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
@@ -66,10 +61,15 @@ class UserModel {
     id: result.insertId,
   };
   }
+  static async setPassword(UserID, passwordHash) {
+  await pool.execute(
+    "UPDATE Users SET Password = ?, UpdatedAt = CURRENT_TIMESTAMP WHERE UserID = ?",
+    [passwordHash, UserID]
+  );
+}
 
   // Cập nhật thông tin người dùng
   static async update(id, user) {
-    const connection = await connectDB();
     const fields = [];
     const values = [];
 
@@ -92,21 +92,19 @@ class UserModel {
     const sql = `UPDATE Users SET ${fields.join(", ")} WHERE UserID = ?`;
     values.push(id);
 
-    await connection.execute(sql, values);
+    await pool.execute(sql, values);
   }
 
   // Xóa người dùng
   static async delete(id) {
-    const connection = await connectDB();
-    await connection.execute(
+    await pool.execute(
       "DELETE FROM Users WHERE UserID = ?",
       [id]
     );
   }
   static async deleteRefreshToken(UserID) {
   try {
-    const connection = await connectDB();
-    await connection.execute(
+    await pool.execute(
       "DELETE FROM RefreshTokens WHERE UserID = ?",
       [UserID]
     );
@@ -118,12 +116,11 @@ class UserModel {
 }
   static async saveRefreshToken(UserID, refreshToken, expiresAt) {
   try {
-    const connection = await connectDB(); // Lấy connection trước
     const sql = `
       INSERT INTO RefreshTokens (UserID, Token, CreatedAt, ExpiresAt)
       VALUES (?, ?, NOW(), ?)
     `;
-    await connection.execute(sql, [UserID, refreshToken, expiresAt]);
+    await pool.execute(sql, [UserID, refreshToken, expiresAt]);
     console.log(`Refresh token đã được lưu cho UserID: ${UserID}`);
   } catch (error) {
     console.error(`Lỗi lưu refresh token cho UserID: ${UserID}`, error);
