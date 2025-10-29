@@ -12,33 +12,29 @@ class UserController {
       res.status(500).send("Server Error");
     }
   }
-  static async create(req, res) {
-    try {
-      const newUser = await UserModel.createUser(req.body);
-      res.status(201).json(newUser); 
-      
-    } catch (err) {
-      res.status(500).json({ error: 'Lỗi khi thêm người dùng' });
-    }
-  }
+  
 
-  static async update(req, res) {
-    try {
-      const id = parseInt(req.params.id);
-      await UserModel.update(id, req.body);
-      res.json({ message: 'Cập nhật người dùng thành công' });
-    } catch (err) {
-      res.status(500).json({ error: 'Lỗi khi cập nhật người dùng' });
-    }
+static async update(req, res) {
+  try {
+    const id = parseInt(req.params.id);
+    const userData = req.body;
+
+    await UserModel.update(id, userData);
+
+    res.json({ ok: true, message: 'Cập nhật người dùng thành công' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: err.message || 'Lỗi khi cập nhật người dùng' });
   }
+}
 
   static async delete(req, res) {
     try {
       const id = parseInt(req.params.id);
       await UserModel.delete(id);
-      res.json({ message: 'Xóa người dùng thành công' });
+      res.json({ ok: true, message: 'Xóa người dùng thành công' });
     } catch (err) {
-      res.status(500).json({ error: 'Lỗi khi xóa người dùng' });
+      res.status(500).json({ ok: false, error: err.message  });
     }
   }
   static async checkUsername(req, res) {

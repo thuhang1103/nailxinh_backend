@@ -3,9 +3,11 @@ const bcrypt = require('bcrypt');
 function authenticateJWT(req, res, next) {
   console.log('vào  authenticate');
   const authHeader = req.headers['authorization'];
+  console.log('Authorization:', authHeader);
   if (!authHeader) return res.status(401).json({ message: 'Missing token' });
 
   const token = authHeader.split(' ')[1];
+  console.log('token:', token);
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = payload;

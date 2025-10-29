@@ -12,6 +12,7 @@ const ProductController = {
 
   getByName: async (req, res) => {
     const { name } = req.query;
+    console.log('Tên sản phẩm cần tìm:', name);
     try {
        if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'Thiếu từ khóa tìm kiếm' });
@@ -59,7 +60,8 @@ const ProductController = {
   },
    async create(req, res) {
     try {
-      await productModel.create(req.body);
+      const product = req.body;
+      await productModel.create(product);
       res.status(201).json({ message: 'Thêm sản phẩm thành công' });
     } catch (err) {
       res.status(500).json({ error: 'Lỗi khi thêm sản phẩm' });
@@ -69,7 +71,8 @@ const ProductController = {
   async update(req, res) {
     try {
       const id = parseInt(req.params.id);
-      await productModel.update(id, req.body);
+      const productData = req.body;
+      await productModel.updateProduct(id, productData);
       res.json({ message: 'Cập nhật sản phẩm thành công' });
     } catch (err) {
       res.status(500).json({ error: 'Lỗi khi cập nhật sản phẩm' });

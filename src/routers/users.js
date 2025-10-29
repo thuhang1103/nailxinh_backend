@@ -6,8 +6,7 @@ const UserController = require("../controllers/userController");
 const { authenticateJWT, authorizeRoles } = require('../middlewares/authMiddleware');
 
 // GET /api/users
-router.get("/", UserController.getAllUsers);
-router.post('/', UserController.create);
+router.get('/', UserController.getAllUsers);
 router.put('/:id', UserController.update);
 router.delete('/:id', UserController.delete);
 router.post('/checkUsername', UserController.checkUsername);

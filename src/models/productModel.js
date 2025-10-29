@@ -14,12 +14,10 @@ const ProductModel = {
   return rows[0].map(row => new Product(row));
 },
   getByName: async (name) => {
-    console.log('Đang tìm kiếm sản phẩm với tên:', name);
   const [rows] = await pool.execute(
     "CALL GetProductsByName(?)",
     [name]
   );
-  console.log('Kết quả truy vấn:', rows);
   // Khi dùng CALL, kết quả trả về là mảng 2 chiều: [ [rows], ... ]
   return rows[0].map(row => new Product(row));
   },
@@ -50,46 +48,57 @@ const ProductModel = {
 
   // Tạo sản phẩm mới
   create: async (product) => {
-    const { ProductName, Price, Description, CategoryID, StockQuantity, SoldQuanlity, ImagePath, status_Product } = product;
+    const { ProductName, Price, Description, CategoryID, StockQuantity, SoldQuantity, ImagePath, status_Product } = product;
     
-    await pool.execute(
-      `INSERT INTO Products 
-      (ProductName, Price, Description, CategoryID, StockQuantity, SoldQuanlity, ImagePath, status_Product, CreatedAt, UpdatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [ProductName, Price, Description, CategoryID, StockQuantity, SoldQuanlity, ImagePath, status_Product]
-    );
+    await pool.execute('CALL CreateProduct(?, ?, ?, ?, ?, ?, ?, ?)', [
+  ProductName,
+  Price,
+  Description,
+  CategoryID,
+  StockQuantity,
+  SoldQuantity,
+  ImagePath,
+  status_Product
+]);
   },
 
   // Cập nhật sản phẩm
   updateProduct: async (id, product) => {
-    const fields = [];
-    const values = [];
+     const {
+      ProductName,
+      Price,
+      Description,
+      CategoryID,
+      StockQuantity,
+      SoldQuantity,
+      ImagePath,
+      status_Product
+    } = product;
 
-    for (const key in product) {
-      fields.push(`${key} = ?`);
-      values.push(product[key]);
-    }
-
-    if (fields.length === 0) {
-      throw new Error("Không có dữ liệu để cập nhật");
-    }
-
-    // Thêm cập nhật thời gian
-    fields.push("UpdatedAt = CURRENT_TIMESTAMP");
-
-    const sql = `UPDATE Products SET ${fields.join(", ")} WHERE ProductID = ?`;
-    values.push(id);
-
-    await pool.execute(sql, values);
+    // Gọi store UpdateProduct trong MySQL
+    await pool.execute(
+      'CALL UpdateProduct(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        id,                  // pProductID
+        ProductName ?? null,  // pProductName
+        Price ?? null,        // pPrice
+        Description ?? null,  // pDescription
+        CategoryID ?? null,   // pCategoryID
+        StockQuantity ?? null,// pStockQuantity
+        SoldQuantity ?? null, // pSoldQuantity
+        ImagePath ?? null,    // pImagePath
+        status_Product ?? null // pStatus
+      ]
+    );
   },
 
   // Xóa sản phẩm
-  delete: async (id) => {
-    await pool.execute(
-      "DELETE FROM Products WHERE ProductID = ?",
-      [id]
-    );
-  },
+delete: async (id) => {
+  await pool.execute(
+    'CALL SoftDeleteProduct(?)',
+    [id]
+  );
+},
   
 };
 

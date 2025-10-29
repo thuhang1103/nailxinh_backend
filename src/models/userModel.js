@@ -50,12 +50,12 @@ class UserModel {
       id: result.insertId,
   };
   }
-  static async createStaff({ email, passwordHash, username, role }) {
+  static async createStaff({ email, passwordHash, username}) {
   const [result] = await pool.execute(
     `INSERT INTO Users 
         (UserName, Email, Password, Role, Phone, avatarImage, CreatedAt, UpdatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [username, email, passwordHash, role, null, 'default.png']
+       VALUES (?, ?, ?, 'Staff', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [username, email, passwordHash, null, 'default.png']
   );
   return {
     id: result.insertId,
@@ -70,31 +70,29 @@ class UserModel {
 
   // Cập nhật thông tin người dùng
   static async update(id, user) {
-    const fields = [];
-    const values = [];
+  const fields = [];
+  const values = [];
 
-    const allowedFields = ['UserName', 'Email', 'Password', 'Role', 'Phone', 'avatarImage'];
+  const allowedFields = ['UserName', 'Email', 'Password', 'Role', 'Phone', 'avatarImage'];
 
-    for (const key of allowedFields) {
-      if (user[key] !== undefined) {
-        fields.push(`${key} = ?`);
-        values.push(user[key]);
-      }
+  for (const key of allowedFields) {
+    if (Object.prototype.hasOwnProperty.call(user, key) && user[key] != null) {
+      fields.push(`${key} = ?`);
+      values.push(user[key]);
     }
-
-    if (fields.length === 0) {
-      throw new Error("Không có dữ liệu để cập nhật");
-    }
-
-    // Cập nhật thời gian
-    fields.push("UpdatedAt = CURRENT_TIMESTAMP");
-
-    const sql = `UPDATE Users SET ${fields.join(", ")} WHERE UserID = ?`;
-    values.push(id);
-
-    await pool.execute(sql, values);
   }
 
+  if (fields.length === 0) {
+    throw new Error("Không có dữ liệu hợp lệ để cập nhật");
+  }
+
+  fields.push("UpdatedAt = CURRENT_TIMESTAMP");
+
+  const sql = `UPDATE Users SET ${fields.join(", ")} WHERE UserID = ?`;
+  values.push(id);
+
+  await pool.execute(sql, values);
+}
   // Xóa người dùng
   static async delete(id) {
     await pool.execute(

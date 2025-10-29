@@ -8,6 +8,9 @@ const userRoutes = require("./src/routers/users");
 const authRoutes = require("./src/routers/authroutes");
 const productRoutes = require("./src/routers/products");
 const suggestionRoutes = require('./src/routers/suggestion_routes');
+const cartRoutes = require('./src/routers/cart_router');
+const cartItemRoutes = require('./src/routers/cartItem_router');
+const customerRoutes = require('./src/routers/customer_router');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +29,9 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/suggestions', suggestionRoutes);
+app.use('/api/carts', cartRoutes);
+app.use('/api/cart_items', cartItemRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Kết nối DB và khởi chạy server
 app.listen(PORT, () => {

@@ -104,7 +104,6 @@ static async verifyOtp(req, res) {
 
 static async registerCustomer(req, res) {
   try {
-    console.log('đã vào register customer backend', req.body);
     const { email, password, username, registrationToken } = req.body;
      const existingEmail = await userModel.findByEmail(email);
     if (existingEmail) {
@@ -125,9 +124,7 @@ static async registerCustomer(req, res) {
       return res.status(401).json({ ok:false, message:'Token invalid' });
     }
     const hashed = await bcrypt.hash(password, 10);
-    console.log('chuẩn bị tạo user và hashed password:', hashed);
     const newUser = await userModel.createCustomer({ email: email, passwordHash: hashed, username: username, role: 'Customer' });
-    console.log('new user created:', newUser);
     return res.status(201).json({ ok:true, message:'Customer registered', userId: newUser.id});
 
   } catch (err) {
@@ -138,11 +135,8 @@ static async registerCustomer(req, res) {
 
 static async resetPassword(req, res) {
   try {
-    console.log('đã vào reset password backend', req.body);
     const { email, password, resetpassToken } = req.body;
-    console.log('dữ liệu nhận được:', { email, password, resetpassToken });
     if (!email || !password || !resetpassToken) {
-      console.log('Thiếu thông tin');
       return res.status(400).json({ ok: false, message: 'Thiếu thông tin' });
     }
      const existingEmail = await userModel.findByEmail(email);
@@ -173,16 +167,16 @@ static async resetPassword(req, res) {
 
 static async registerStaff(req, res) {
   try {
-    const { email, password, username, registrationToken } = req.body;
+    const { email, password, username} = req.body;
     // verify registrationToken (use token.service)
-    const { verifyToken } = require('../services/token.service');
-    const payload = verifyToken(registrationToken);
-    if (payload.email !== email) return res.status(401).json({ ok:false, message:'Token invalid' });
+    // const { verifyToken } = require('../services/token.service');
+    // const payload = verifyToken(registrationToken);
+    // if (payload.email !== email) return res.status(401).json({ ok:false, message:'Token invalid' });
 
     // create user (hash password)
-    const bcrypt = require('bcryptjs');
+    
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = await userRepo.createStaff({ email, passwordHash: hashed, username, role: 'Staff' });
+    const newUser = await userModel.createStaff({ email, passwordHash: hashed, username });
     return res.status(201).json({ ok:true, message:'Staff registered', userId: newUser.id });
   } catch (err) {
     const status = err.status || 500;

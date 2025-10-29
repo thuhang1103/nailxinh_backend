@@ -21,7 +21,6 @@ const SuggestionController = {
   },
   addSuggestion: async (req, res) => {
     try {
-       console.log('đã vào addSuggestion backend', req.body);
       const { refreshToken, keyWord } = req.body;
       if ( !keyWord || keyWord.trim() === '') {
         return res.status(400).json({ error: 'Thiếu thông tin cần thiết' });
