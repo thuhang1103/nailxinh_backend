@@ -1,10 +1,26 @@
 
-
-// module.exports = ProductModel;
-
 const Product = require('./product');
-const pool = require("../configs/db");
+const ProductDetail = require('./product_detail');
+const image= require('./product_image');
+const variantOption = require('./Variant_Options');
+const variantValue = require('./variant_value');
 
+const pool = require("../configs/db");
+function extractInsertId(rows) {
+  if (!rows) return 0;
+
+  if (Array.isArray(rows)) {
+    if (Array.isArray(rows[0]) && rows[0].length > 0 && rows[0][0].insertId) {
+      return rows[0][0].insertId;
+    }
+    if (rows[0] && rows[0].insertId) {
+      return rows[0].insertId;
+    }
+  }
+
+  if (rows.insertId) return rows.insertId;
+  return 0;
+}
 const ProductModel = {
   // Lấy sản phẩm theo tên
   getAllSortedBySoldQuantity: async () => {
@@ -31,11 +47,19 @@ const ProductModel = {
   },
 
   getById: async (id) => {
-  const [rows] = await pool.execute(
-    "CALL GetProductByID(?)",
-    [id]
-  );
-  return rows[0].length > 0 ? rows[0].map(row => new Product(row)) : null;
+   const [rows] = await pool.execute("CALL GetProductByID(?)", [id]);
+
+  if (!rows[0] || rows[0].length === 0) return null;
+
+  return rows[0].map(row => {
+    if (row.Images && typeof row.Images === 'string') {
+      row.Images = row.Images.split(',').map(url => url.trim());
+    } else {
+      row.Images = [];
+    }
+
+    return new ProductDetail(row);
+  });
   },
 
   getByStatus: async (status) => {
@@ -75,7 +99,6 @@ const ProductModel = {
       status_Product
     } = product;
 
-    // Gọi store UpdateProduct trong MySQL
     await pool.execute(
       'CALL UpdateProduct(?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
@@ -99,7 +122,101 @@ delete: async (id) => {
     [id]
   );
 },
-  
-};
+  getImagesByProductId: async (productId) => {
+    const [rows] = await pool.execute("CALL GetImagesByProductID(?)", [productId]);
+    const data = Array.isArray(rows) ? rows[0] ?? [] : rows ?? [];
+    return (data || []).map(r => new image(r));
+  },
 
+  // Thêm image cho product -> trả về insertId (hoặc 0 nếu không lấy được)
+  addProductImage: async (productId, imageURL) => {
+    const [rows] = await pool.query("CALL AddProductImage(?, ?)", [productId, imageURL]);
+    const insertId = extractInsertId(rows);
+    return insertId ?? 0;
+  },
+
+  // Xóa image theo imageId -> trả về affectedRows
+  deleteProductImage: async (imageId) => {
+    const [rows] = await pool.execute("CALL DeleteProductImage(?)", [imageId]);
+    const resultHeader = Array.isArray(rows) && rows.length > 1 ? rows[1] : rows;
+    return resultHeader?.affectedRows ?? 0;
+  },
+  // GetVariantOptionsByProductID
+  getVariantOptionsByProductID: async (productId) => {
+    const [rows] = await pool.execute("CALL GetVariantOptionsByProductID(?)", [productId]);
+    return rows[0].map(row => new variantOption(row));
+  },
+  //AddVariantOption
+  addVariantOption: async (productId, optionName) => {
+    const [rows] = await pool.execute("CALL AddVariantOption(?, ?)", [productId, optionName]);
+    const insertId = extractInsertId(rows);
+    return insertId ?? 0;
+  },
+  deleteVariantOption: async (optionId) => {
+    const [rows] = await pool.execute("CALL DeleteVariantOption(?)", [optionId]);
+    const resultHeader = Array.isArray(rows) && rows.length > 1 ? rows[1] : rows;
+    return resultHeader?.affectedRows ?? 0;
+  },
+
+  // Cập nhật tên option -> trả về affectedRows
+  updateVariantOptionName: async (optionId, newName) => {
+    const [rows] = await pool.execute("CALL UpdateVariantOptionName(?, ?)", [optionId, newName]);
+    const resultHeader = Array.isArray(rows) && rows.length > 1 ? rows[1] : rows;
+    return resultHeader?.affectedRows ?? 0;
+  },
+  //AddVariantValue
+  addVariantValue: async (optionId, valueName) => {
+    const [rows] = await pool.execute("CALL AddVariantValue(?, ?)", [optionId, valueName]);
+    const insertId = extractInsertId(rows);
+    return insertId ?? 0;
+  },
+  //DeleteVariantValue
+  deleteVariantValue: async (valueId) => {
+    const [rows] = await pool.execute("CALL DeleteVariantValue(?)", [valueId]);
+    if (Array.isArray(rows) && Array.isArray(rows[0]) && typeof rows[0][0]?.affectedRows !== 'undefined') {
+      return rows[0][0].affectedRows;
+    }
+    return 0;
+  },
+  //UpdateVariantValueName
+  updateVariantValueName: async (valueId, newName) => {
+     const [rows] = await pool.execute("CALL UpdateVariantValueName(?, ?)", [valueId, newName]);
+
+    if (Array.isArray(rows) && Array.isArray(rows[0]) && rows[0][0]?.affectedRows !== undefined) {
+    return rows[0][0].affectedRows;
+    }
+    return 0;
+  },
+  //GetVariantValuesByOptionID
+  getVariantValuesByOptionID: async (optionId) => {
+    const [rows] = await pool.execute("CALL GetVariantValuesByOptionID(?)", [optionId]);
+    return rows[0].map(row => new variantValue(row));
+  },
+  insertProductVariant: async (
+    productId,
+    option1ValueId,
+    option2ValueId = null,
+    price = 0,
+    stock = 0,
+    imageURL = null
+  ) => {
+    const pProductID = Number(productId);
+    const pOption1 = Number(option1ValueId);
+    const pOption2 = option2ValueId != null ? Number(option2ValueId) : null;
+    const pPrice = price != null ? Number(price) : 0;
+    const pStock = stock != null ? Number(stock) : 0;
+    const pImage = imageURL ?? null;
+
+    const [rows] = await pool.execute(
+      "CALL InsertProductVariant(?, ?, ?, ?, ?, ?)",
+      [pProductID, pOption1, pOption2, pPrice, pStock, pImage]
+    );
+
+    return extractInsertId(rows);
+  },
+  getVariantsByValueIds: async (valueId1, valueId2 = null) => {
+  const [rows] = await pool.execute("CALL GetVariantsByValueIDs(?, ?)", [valueId1, valueId2]);
+  return rows[0];
+},
+}
 module.exports = ProductModel;
