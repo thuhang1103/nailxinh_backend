@@ -18,4 +18,7 @@ router.get('/:cartItemId', authenticateJWT, authorizeRoles('Customer'), CartItem
 // Lấy tất cả cart items của user
 router.get('/user/:userId', authenticateJWT, authorizeRoles('Customer'), CartItemController.getAllByUserId);
 
+// Kiểm tra cart item tồn tại
+router.post('/check-exists', authenticateJWT, authorizeRoles('Customer'), CartItemController.checkCartItemExists);
+
 module.exports = router;

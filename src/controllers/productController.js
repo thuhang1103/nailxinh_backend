@@ -299,6 +299,33 @@ const ProductController = {
     res.status(500).json({ error: "Lỗi khi lấy biến thể" });
   }
 },
+  getVariantIDByOptions: async (req, res) => {
+    const option1ValueId = parseInt(req.query.option1ValueId);
+const option2ValueId = req.query.option2ValueId 
+    ? parseInt(req.query.option2ValueId)
+    : null; 
+    try {
+      const variantId = await productModel.getVariantIDByOptions(option1ValueId, option2ValueId);
+      if (variantId) {
+        res.json({ variantId });
+      } else {
+        res.status(404).json({ error: 'Không tìm thấy biến thể' });
+      }
+    } catch (err) {
+      console.error('Lỗi khi lấy ID biến thể:', err);
+      res.status(500).json({ error: 'Lỗi khi lấy ID biến thể' });
+    }
+  },
+  getSimilarProductsByKeywords: async (req, res) => {
+    const { keywords } = req.body;
+    try {
+      const products = await productModel.getSimilarProductsByKeywords(keywords);
+      res.json(products);
+    } catch (err) {
+      console.error('Lỗi khi lấy sản phẩm tương tự:', err);
+      res.status(500).json({ error: 'Lỗi khi lấy sản phẩm tương tự' });
+    }
+  }
 
 };
 

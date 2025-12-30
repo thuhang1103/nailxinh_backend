@@ -3,20 +3,20 @@ const CartItem = require("./cartItem");
 
 const CartItemModel = {
   // Thêm cart item bằng stored procedure -> trả về insertId (hoặc 0)
-  addCartItem: async ({ CartID, ProductID, Quantity = 1, Price }) => {
+  addCartItem: async ({ UserID, ProductID, VariantID, Quantity = 1, Price }) => {
     const [rows] = await pool.execute(
-      "CALL AddCartItem(?, ?, ?, ?)",
-      [CartID, ProductID, Quantity, Price]
+      "CALL AddCartItem(?, ?, ?, ?, ?)",
+      [UserID, ProductID, VariantID, Quantity, Price]
     );
      const insertId = rows[0][0]?.insertId ?? 0;
   return insertId;
   },
 
   // Cập nhật quantity và is_selected bằng stored procedure -> trả về affectedRows
-  updateCartItem: async (CartItemID, Quantity, is_selected = 0) => {
+  updateCartItem: async (CartItemID, Quantity,VariantID, is_selected = 0) => {
     const [rows] = await pool.execute(
-      "CALL UpdateCartItem(?, ?, ?)",
-      [CartItemID, Quantity, is_selected]
+      "CALL UpdateCartItem(?, ?, ?, ?)",
+      [CartItemID, Quantity, VariantID, is_selected]
     );
     const result = rows[0][0] ?? {};
     return {
@@ -44,7 +44,7 @@ const CartItemModel = {
   // Xóa cart item bằng stored procedure -> trả về affectedRows
   deleteCartItem: async (CartItemID) => {
     const [rows] = await pool.execute(
-      "CALL DeleteCartItem(?)",
+      "CALL softDeleteCartItem(?)",
       [CartItemID]
     );
     const resultHeader = Array.isArray(rows) && rows.length > 1 ? rows[1] : rows;
@@ -71,6 +71,16 @@ const CartItemModel = {
     if (!resultSet || resultSet.length === 0) return null;
     return new CartItem(resultSet[0]);
   },
+  checkCartItemExists: async (userId, variantId, addQuantity) => {
+  const [result] = await pool.query(
+    "CALL CheckCartItemExists(?, ?, ?)",
+    [userId, variantId, addQuantity]
+  );
+  const rows = result[0]; 
+  const existsItem = rows[0]?.ExistsItem;
+
+  return existsItem;
+},
 
 };
 

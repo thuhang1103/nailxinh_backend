@@ -14,5 +14,9 @@ router.patch('/update', authenticateJWT, authorizeRoles('Customer'), CustomerCon
 
 // Admin only for delete (adjust role as needed)
 router.delete('/delete', authenticateJWT, authorizeRoles('Customer'), CustomerController.deleteCustomer);
+//acount
+router.get('/get_profile', authenticateJWT, authorizeRoles('Customer'), CustomerController.getCustomerProfile);
+router.patch('/update_profile', authenticateJWT, authorizeRoles('Customer'), CustomerController.updateCustomerProfile);
+router.delete('/delete_account', authenticateJWT, authorizeRoles('Customer'), CustomerController.deleteAccount);
 
 module.exports = router;

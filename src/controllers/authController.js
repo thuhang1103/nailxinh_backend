@@ -5,6 +5,27 @@ const userModel = require('../models/userModel');
 //const userRepo = require('../repositories/user.repo'); 
 
 class AuthController {
+    static async getUserID(req, res){
+    try {
+      const userId = req.user?.UserID ?? req.user?.userId ?? req.user?.id;
+      if (userId) return res.json({ ok: true, UserID: Number(userId) });
+
+      const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+      if (!authHeader) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+
+      const token = authHeader.split(' ')[1] ?? authHeader;
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const tokenUserId = payload?.UserID ?? payload?.userId ?? payload?.id;
+      if (!tokenUserId) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+
+      return res.json({ ok: true, UserID: Number(tokenUserId) });
+    } catch (err) {
+      console.error('getUserID error:', err);
+      if (err.name === 'TokenExpiredError') return res.status(401).json({ ok: false, message: 'Token expired' });
+      if (err.name === 'JsonWebTokenError') return res.status(401).json({ ok: false, message: 'Invalid token' });
+      return res.status(500).json({ ok: false, message: 'Server error' });
+    }
+  }
   static async login(req, res) {
     console.log(req.body);
     const { UserName, Password } = req.body;

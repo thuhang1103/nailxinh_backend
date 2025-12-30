@@ -1,5 +1,8 @@
 //customer model
 const customerModel = require('../models/customerModel');
+const profile =  require('../models/profile/profile_model');
+
+
 
 const CustomerController = {
   // GET /api/customers/user/:userId
@@ -99,7 +102,50 @@ deleteCustomer: async (req, res) => {
     return res.status(500).json({ error: 'Lỗi khi xóa customer' });
   }
 },
+/////
+getCustomerProfile: async (req, res) => {
+    try {
+      const userId = Number( req.user?.UserID );
+      if (!userId) return res.status(400).json({ error: 'userId required' });
+
+      const customer = await profile.getCustomerProfile(userId);
+      if (customer === null) return res.status(404).json({ error: 'Customer not found' });
+      return res.json(customer);
+    } catch (err) {
+      console.error('getCustomerProfile error:', err);
+      return res.status(500).json({ error: ' server đang gặp lỗi' });
+    }
+  },
+  
+  updateCustomerProfile: async (req, res) => {
+     try {
+      const userId = Number( req.user?.UserID );
+      if (!userId) return res.status(400).json({ error: 'userId required' });
+     const { fullName, phone } = req.body;
+      const result = await profile.updateCustomerProfile(userId, fullName, phone);
+      if (result === null) return res.status(404).json({ error: 'Customer not found' });
+      return res.json(result);
+    } catch (err) {
+      console.error('updateCustomerProfile error:', err);
+      return res.status(500).json({ error: ' server đang gặp lỗi' });
+    }
+  },
+  deleteAccount: async (req, res) => {
+    try {
+      const userId = Number( req.user?.UserID );
+      if (!userId) return res.status(400).json({ error: 'userId required' });
+      const result = await profile.deleteCustomerAccount(userId);
+      if (result === null) return res.status(404).json({ error: 'Customer not found' });
+      return res.json(result);
+    } catch (err) {
+      console.error('deleteAccount error:', err);
+      return res.status(500).json({ error: ' server đang gặp lỗi' });
+    }
+  },
+
+
 
 };
 
 module.exports = CustomerController;
+

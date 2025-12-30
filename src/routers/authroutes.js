@@ -5,7 +5,8 @@ const { authenticateJWT, authorizeRoles } = require('../middlewares/authMiddlewa
 const bcrypt = require('bcrypt');
 
 router.post('/login', AuthController.login);
-router.post('/logout', authenticateJWT, AuthController.logout);
+router.get('/getUserID',authenticateJWT,AuthController.getUserID);
+router.post('/logout',  authenticateJWT,AuthController.logout);
 router.post('/sendOtp', AuthController.sendOtp);
 router.post('/verifyOtp', AuthController.verifyOtp);
 router.post('/resetPassword', AuthController.resetPassword);

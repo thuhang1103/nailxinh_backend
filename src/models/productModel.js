@@ -217,6 +217,32 @@ delete: async (id) => {
   getVariantsByValueIds: async (valueId1, valueId2 = null) => {
   const [rows] = await pool.execute("CALL GetVariantsByValueIDs(?, ?)", [valueId1, valueId2]);
   return rows[0];
-},
+  },
+    getVariantIDByOptions: async (option1ValueId, option2ValueId = null) => {
+    const [rows] = await pool.execute("CALL GetVariantIDByOptions(?, ?)", [option1ValueId, option2ValueId]);
+    const resultSet = Array.isArray(rows) ? (rows[0] ?? []) : (rows ?? []);
+    return resultSet[0]?.VariantID ?? null;
+  },
+  getSimilarProductsByKeywords: async (keywords) => {
+    if (!keywords) return [];
+
+    let payload;
+    if (typeof keywords === 'string') {
+      try {
+        JSON.parse(keywords);
+        payload = keywords;
+      } catch {
+        payload = JSON.stringify([keywords]);
+      }
+    } else if (Array.isArray(keywords)) {
+      payload = JSON.stringify(keywords);
+    } else {
+      return [];
+    }
+
+    const [rows] = await pool.execute("CALL GetSimilarProductsByKeywordList(?)", [payload]);
+    const list = Array.isArray(rows) ? (rows[0] ?? []) : (rows ?? []);
+    return list.map(r => new Product(r));
+  },
 }
 module.exports = ProductModel;

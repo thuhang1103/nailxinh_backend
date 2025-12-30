@@ -4,11 +4,11 @@ const CartItemController = {
   // POST /api/cart-items
   addCartItem: async (req, res) => {
     try {
-      const { CartID, ProductID, Quantity = 1, Price } = req.body;
-      if (!CartID || !ProductID || Price == null) {
-        return res.status(400).json({ error: 'CartID, ProductID và Price là bắt buộc' });
+      const { UserID, ProductID, VariantID, Quantity = 1, Price } = req.body;
+      if (!UserID || !ProductID || Price == null) {
+        return res.status(400).json({ error: 'UserID, ProductID và Price là bắt buộc' });
       }
-      const insertId = await CartItemModel.addOrUpdateCartItem({ CartID, ProductID, Quantity, Price });
+      const insertId = await CartItemModel.addCartItem({ UserID, ProductID, VariantID, Quantity, Price });
       return res.status(201).json({ message: 'CartItem created', CartItemID: insertId });
     } catch (err) {
       console.error('addCartItem error:', err);
@@ -20,39 +20,30 @@ const CartItemController = {
   updateCartItem: async (req, res) => {
   try {
     const cartItemId = Number(req.params.cartItemId);
-    const { Quantity, is_selected } = req.body;
+    const { Quantity, is_selected, VariantID } = req.body;
 
     if (
       !cartItemId ||
-      (typeof Quantity === 'undefined' && typeof is_selected === 'undefined')
+      (typeof Quantity === 'undefined' &&
+       typeof is_selected === 'undefined' &&
+       typeof VariantID === 'undefined')
     ) {
-      return res
-        .status(400)
-        .json({
-          error:
-            'cartItemId và ít nhất một trong Quantity hoặc is_selected là bắt buộc',
-        });
+      return res.status(400).json({
+        error:
+          'cartItemId và ít nhất một trong Quantity, is_selected hoặc VariantID là bắt buộc',
+      });
     }
 
-    const q =
-      typeof Quantity !== 'undefined' ? Number(Quantity) : undefined;
-
-    if (typeof q !== 'undefined' && (!Number.isInteger(q) || q < 1)) {
-      return res
-        .status(400)
-        .json({ error: 'Quantity phải là số nguyên >= 1' });
-    }
 
     const result = await CartItemModel.updateCartItem(
       cartItemId,
-      q ?? null,
-      is_selected ?? 0
+      Quantity ?? null,
+      VariantID ?? null,
+      is_selected ?? null
     );
 
     if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ error: 'CartItem không tìm thấy hoặc không thay đổi' });
+      return res.status(404).json({ error: 'CartItem không tìm thấy hoặc không thay đổi' });
     }
 
     return res.json({
@@ -62,12 +53,9 @@ const CartItemController = {
     });
   } catch (err) {
     console.error('updateCartItem error:', err);
-    return res
-      .status(500)
-      .json({ error: 'Lỗi khi cập nhật cart item' });
+    return res.status(500).json({ error: 'Lỗi khi cập nhật cart item' });
   }
 },
-
   // DELETE /api/cart-items/:cartItemId
   deleteCartItem: async (req, res) => {
     try {
@@ -107,7 +95,21 @@ const CartItemController = {
       console.error('getAllByUserId error:', err);
       return res.status(500).json({ error: 'Lỗi khi lấy cart items của user' });
     }
-  }
+  },
+  //checkCartItemExits
+  checkCartItemExists: async (req, res) => {
+    try {
+      const { userId, variantId, addQuantity } = req.body;
+      if (!userId || !variantId || !addQuantity) {
+        return res.status(400).json({ error: 'userId, variantId và addQuantity là bắt buộc' });
+      }
+      const existsItem = await CartItemModel.checkCartItemExists(userId, variantId, addQuantity);
+      return res.json({ existsItem });
+    } catch (err) {
+      console.error('checkCartItemExists error:', err);
+      return res.status(500).json({ error: 'Lỗi khi kiểm tra cart item' });
+    }
+  },
 };
 
 module.exports = CartItemController;

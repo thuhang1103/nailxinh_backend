@@ -14,14 +14,14 @@ class UserModel {
   // Tìm người dùng theo UserName
   static async findByUserName(UserName) {
     const [rows] = await pool.execute(
-      "SELECT * FROM Users WHERE UserName = ?",
-      [UserName]
-    );
+  "SELECT * FROM Users WHERE UserName = ? AND Is_Deleted = 0",
+  [UserName]
+);
     return rows[0] || null;
   }
   static async findByEmail(Email) {
     const [rows] = await pool.execute(
-      "SELECT * FROM Users WHERE Email = ?",
+      "SELECT * FROM Users WHERE Email = ? AND Is_Deleted = 0",
       [Email]
     );
     return rows[0] || null;

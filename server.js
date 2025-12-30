@@ -11,6 +11,10 @@ const suggestionRoutes = require('./src/routers/suggestion_routes');
 const cartRoutes = require('./src/routers/cart_router');
 const cartItemRoutes = require('./src/routers/cartItem_router');
 const customerRoutes = require('./src/routers/customer_router');
+const pointRoutes = require('./src/routers/point_router');
+const voucherRoutes = require('./src/routers/voucher_router');
+const addressRoutes =  require('./src/routers/address_router');
+const orderRoutes = require('./src/routers/order_router');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +36,10 @@ app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/cart_items', cartItemRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/points', pointRoutes);
+app.use('/api/vouchers', voucherRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Kết nối DB và khởi chạy server
 app.listen(PORT, () => {
