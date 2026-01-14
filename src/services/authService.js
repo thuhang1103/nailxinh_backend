@@ -7,6 +7,7 @@ const { signRegistrationToken } = require('./tokenService');
 const OTP_TTL = parseInt(process.env.OTP_TTL || '300', 10);
 
 async function sendOtp(email) {
+  console.log('Sending OTP to data:', email);
   const keyOtp = `otp:email:${email}`;
   const keyResend = `otp:resend:${email}`;
 
@@ -20,11 +21,16 @@ async function sendOtp(email) {
   await cache.set(keyOtp, otp, OTP_TTL);
   await cache.set(keyResend, '1', 30);
 
-  await mail.sendOtpEmail(email, otp);
+  try {
+    await mail.sendOtpEmail(email, otp);
+  } catch (e) {
+    console.error(e);
+  }
+  console.log('OTP sent successfully');
   return true;
 }
 async function sendConfirmationEmail(email, userName) {
-
+  console.log('Sending confirmation email to:', email);
   await mail.sendConfirmationEmail(email, userName);
   return true;
 }

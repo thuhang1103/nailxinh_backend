@@ -99,6 +99,19 @@ const PointController = {
       return res.status(500).json({ error: 'Spin failed' });
     }
   },
+  resetLoyaltyPoints: async (req, res) => {
+    try {
+      const userId = Number( req.user?.UserID );
+      if (!userId) return res.status(400).json({ error: 'userId required' });
+
+      const affected = await pointModel.resetLoyaltyPointsByUserId(userId);
+      if (affected === 0) return res.status(400).json({ error: 'Không thể reset điểm (customer không tồn tại)' });
+      return res.json({ message: 'Đã reset điểm thành công', affectedRows: affected });
+    } catch (err) {
+      console.error('resetLoyaltyPoints error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  },
 
 };
 

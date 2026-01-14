@@ -15,6 +15,8 @@ const pointRoutes = require('./src/routers/point_router');
 const voucherRoutes = require('./src/routers/voucher_router');
 const addressRoutes =  require('./src/routers/address_router');
 const orderRoutes = require('./src/routers/order_router');
+const SpendingRoutes =require('./src/routers/Spending_router');
+const Import_InventoryRouter = require('./src/routers/import_inventory_router');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +42,8 @@ app.use('/api/points', pointRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/spendings', SpendingRoutes);
+app.use('/api/imports', Import_InventoryRouter);
 
 // Kết nối DB và khởi chạy server
 app.listen(PORT, () => {

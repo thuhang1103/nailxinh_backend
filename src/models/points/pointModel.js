@@ -67,7 +67,12 @@ checkCanSpinToday: async (userId) => {
   } finally {
     conn.release();
   }
-}
+},
+resetLoyaltyPointsByUserId: async (userId) => {
+    const [rows] = await pool.execute('CALL ResetLoyaltyPointsByUserID(?)', [userId]);
+    const resultHeader = Array.isArray(rows) && rows.length > 1 ? rows[1] : rows;
+    return resultHeader?.affectedRows ?? 0;
+  },
 
 };
 

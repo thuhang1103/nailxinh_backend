@@ -177,7 +177,9 @@ static async resetPassword(req, res) {
     console.log('chuẩn bị tạo mật khẩu mới :', hashed);
     await userModel.setPassword(existingEmail.UserID, hashed);
     console.log('đổi mật khẩu thành công ', existingEmail);
+    
     await authService.sendConfirmationEmail(email, existingEmail.UserName);
+
     return res.status(201).json({ ok:true, message:'password reseted', userName: existingEmail.UserName });
 
   } catch (err) {

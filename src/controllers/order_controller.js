@@ -9,7 +9,7 @@ const OrderController = {
 
 createOrderDetail: async (req, res) => {
     try {
-      const { orderId, productId, quantity, price } = req.body || {};
+      const { orderId, productId, productName, variantName, imagePath, quantity, price } = req.body || {};
 
       const oId = Number(orderId);
       const pId = Number(productId);
@@ -21,7 +21,7 @@ createOrderDetail: async (req, res) => {
       if (!Number.isInteger(qty) || qty <= 0) return res.status(400).json({ error: 'quantity required and must be integer > 0' });
       if (!Number.isFinite(pr) || pr < 0) return res.status(400).json({ error: 'price required and must be non-negative' });
 
-      const created = await orderDetail.createOrderDetail(oId, pId, qty, pr);
+      const created = await orderDetail.createOrderDetail(oId, pId, productName, variantName, imagePath, qty, pr);
       if (!created) return res.status(500).json({ error: 'Create order detail failed' });
 
       return res.status(201).json({ success: true, OrderDetailID: created.OrderDetailID });

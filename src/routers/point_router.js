@@ -9,5 +9,6 @@ router.post('/add-points', authenticateJWT, authorizeRoles('Customer'), PointCon
 router.get('/points-status', authenticateJWT, authorizeRoles('Customer'), PointController.getPointsStatus);
 router.get('/can-spin-today', authenticateJWT, authorizeRoles('Customer'), PointController.checkCanSpinToday);
 router.post('/spin-lucky', authenticateJWT, authorizeRoles('Customer'), PointController.spinLucky);
+router.post('/reset-points', authenticateJWT, authorizeRoles('Customer'), PointController.resetLoyaltyPoints);
 
 module.exports = router;

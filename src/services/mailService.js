@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendOtpEmail(email, otp) {
+  console.log('Sending OTP email to:', email,otp);
   const mail = {
     from: `"NailXinh" <${process.env.GMAIL_USER}>`,
     to: email,

@@ -2,10 +2,10 @@ const pool = require("../../configs/db");
 const OrderDetail = require("./order_detail");
 
 const orderDetailModel = {
-  createOrderDetail: async (orderId, productId, quantity, price) => {
+  createOrderDetail: async (orderId, productId,productName,variantName,imagePath, quantity, price,) => {
     const [rows] = await pool.execute(
-      "CALL CreateOrderDetail(?, ?, ?, ?)",
-      [orderId, productId, quantity, price]
+      "CALL CreateOrderDetail(?, ?, ?, ?, ?, ?, ?)",
+      [orderId, productId,productName,variantName,imagePath, quantity, price]
     );
     const resultSet = Array.isArray(rows) ? (rows[0] ?? []) : (rows ?? []);
     const first = resultSet[0] ?? null;
